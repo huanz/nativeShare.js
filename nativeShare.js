@@ -4,13 +4,13 @@
         module.exports = global.document ?
             factory(global, true) :
             function(w) {
-				if (!w.document) {
-					throw new Error('nativeShare requires a window with a document');
-				}
-				return factory(w);
+                if (!w.document) {
+                    throw new Error('nativeShare requires a window with a document');
+                }
+                return factory(w);
 			};
     } else {
-		factory(global);
+        factory(global);
 	}
 }(typeof window !== 'undefined' ? window : this, function(window, noGlobal) {
     'use strict';
