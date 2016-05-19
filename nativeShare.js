@@ -20,7 +20,7 @@
             browser: null,
             version: null
         };
-        var agent = window.navigator.userAgentent;
+        var agent = window.navigator.userAgent;
         var match = null;
         if (/tieba/i.test(agent)) {
             result.browser = 'tieba';
@@ -88,6 +88,7 @@
                     wrap.appendChild(metaEl);
                     doc.write(wrap.innerHTML);
                 }
+            }
         });
     };
     var title = doc.title;
@@ -139,14 +140,14 @@
                 }
                 break;
             case 'qq':
-                intallScript('http://jsapi.qq.com/get?api=app.share', function () {
+                intallScript('http://jsapi.qq.com/get?api=app.share', function (error) {
                     if (!error && browser && browser.app) {
                         browser.app.share({
                             url: config.link,
                             title: config.title,
                             description: config.desc,
-                            img_url: config.imgUrl,
-                            img_title: config.imgTitle,
+                            imgUrl: config.imgUrl,
+                            imgTitle: config.imgTitle,
                         });
                     }
                 });
@@ -155,5 +156,8 @@
                 break;
         }
     };
+    if (!noGlobal) {
+	    window.nativeShare = nativeShare;
+    }
     return nativeShare;
 }));
