@@ -14,7 +14,7 @@
     }
 }(typeof window !== 'undefined' ? window : this, function(window, noGlobal) {
     'use strict';
-    var ua = (function (
+    var ua = (function () {
         var result = {
             os: null,
             browser: null,
@@ -43,7 +43,7 @@
             result.os = 'android';
         }
         return result;
-    ))();
+    })();
     var defaults = function (target, source) {
         var k = null;
         for(k in source) {
@@ -73,6 +73,9 @@
     };
     var title = doc.title;
     var tmp = null;
+    var tiebShare = function () {
+
+    };
     var nativeShare = function (config) {
         defaults(config, {
             link: window.location.href || '',
