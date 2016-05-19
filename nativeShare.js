@@ -31,7 +31,7 @@
         } else if (match = /UCBrowser\/([\w.]+)/i.exec(agent)) {
             result.browser = 'uc';
             result.version = match[1];
-        } else if (/MQQ/i.test(agent)) {
+        } else if (/MQQBrowser/i.test(agent)) {
             result.browser = 'qq';
             if (match = /Version\/([\w.]+)/i.exec(agent)) {
                 result.version = match[1];
@@ -53,7 +53,7 @@
         }
         return target;
     };
-    var doc = document;
+    var doc = window.document;
     var intallScript = function (url, callback) {
         var head = doc.head || doc.getElementsByTagName('head')[0] || doc.documentElement;
         var node = doc.createElement('script');
@@ -71,11 +71,27 @@
         node.src = url;
         head.appendChild(node);
     };
+    var metaHandler = function (metaArr) {
+        var docEl = doc.documentElement;
+        metaArr.forEach(function (meta) {
+            var metaEl = doc.querySelector('meta[name="' + meta.name + '"]');
+            if (metaEl) {
+                metaEl.setAttribute('content', meta.content);
+            } else {
+                metaEl = doc.createElement('meta');
+                metaEl.setAttribute('name', meta.name);
+                metaEl.setAttribute('content', meta.content);
+                if (docEl.firstElementChild) {
+                    docEl.firstElementChild.appendChild(metaEl);
+                } else {
+                    var wrap = doc.createElement('div');
+                    wrap.appendChild(metaEl);
+                    doc.write(wrap.innerHTML);
+                }
+        });
+    };
     var title = doc.title;
     var tmp = null;
-    var tiebShare = function () {
-
-    };
     var nativeShare = function (config) {
         defaults(config, {
             link: window.location.href || '',
@@ -87,7 +103,13 @@
         });
         switch(ua.browser) {
             case 'tieba':
-                tiebShare(config);
+                metaHandler([{
+                    name: 'description',
+                    content: config.desc
+                }, {
+                    name: 'share-icon',
+                    content: config.imgUrl
+                }]);
                 break;
             case 'weixin':
                 intallScript('http://res.wx.qq.com/open/js/jweixin-1.0.0.js', function (error) {
@@ -95,14 +117,40 @@
 
                     }
                 });
+                break;
             case 'baiduboxapp':
                 intallScript('http://static1.searchbox.baidu.com/static/searchbox/openjs/aio.js?v=201502', function (error) {
                     if (!error) {
-
+                        Box.nativeShare({
+                            title: config.title,
+                            content: config.desc,
+                            iconUrl : config.imgUrl,
+                            imageUrl: config.imgUrl,
+                            linkUrl : config.link
+                        });
                     }
                 });
+                break;
             case 'uc':
+                if (ucweb) {
+                    ucweb.startRequest('shell.page_share', [config.title, config.imageUrl, config.link, '', '', '@' + config.from, '']);
+                } else if (ucbrowser) {
+                    ucbrowser.web_share(config.title, config.imageUrl, config.link, '', '', '@' + config.from, '');
+                }
+                break;
             case 'qq':
+                intallScript('http://jsapi.qq.com/get?api=app.share', function () {
+                    if (!error && browser && browser.app) {
+                        browser.app.share({
+                            url: config.link,
+                            title: config.title,
+                            description: config.desc,
+                            img_url: config.imgUrl,
+                            img_title: config.imgTitle,
+                        });
+                    }
+                });
+                break;
             default:
                 break;
         }
