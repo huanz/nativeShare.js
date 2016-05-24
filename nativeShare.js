@@ -32,10 +32,12 @@
             result.browser = 'uc';
             result.version = match[1];
         } else if (/MQQBrowser/i.test(agent)) {
-            result.browser = 'qq';
+            result.browser = 'qqbrowser';
             if (match = /Version\/([\w.]+)/i.exec(agent)) {
                 result.version = match[1];
             }
+        } else if (/mobile.*qq/i.test(agent)) {
+            result.browser = 'mobileqq';
         }
         if (agent.match('iPhone( Simulator)?;') || agent.match('iPad;') || agent.match('iPod;')) {
             result.os = 'ios';
@@ -99,7 +101,6 @@
             title: title,
             desc: title,
             imgUrl: (tmp = doc.getElementsByTagName('img')[0]) && tmp.src || '',
-            imgTitle: title,
             from: window.location.host
         });
         switch(ua.browser) {
@@ -139,15 +140,31 @@
                     ucbrowser.web_share(config.title, config.imageUrl, config.link, '', '', '@' + config.from, '');
                 }
                 break;
-            case 'qq':
-                intallScript('http://jsapi.qq.com/get?api=app.share', function (error) {
-                    if (!error && browser && browser.app) {
+            case 'qqbrowser':
+                intallScript('http://jsapi.qq.com/get?api=app.share', function () {
+                    if (browser && browser.app) {
                         browser.app.share({
                             url: config.link,
                             title: config.title,
                             description: config.desc,
-                            imgUrl: config.imgUrl,
-                            imgTitle: config.imgTitle,
+                            img_url: config.imgUrl
+                        });
+                    }
+                });
+                break;
+            case 'mobileqq':
+                installScript('http://pub.idqqimg.com/qqmobile/qqapi.js', function () {
+                    if (mqq && mqq.ui) {
+                        mqq.ui.setOnShareHandler(function(type) {
+                            mqq.ui.shareMessage({
+                                url: config.link,
+                                title: config.title,
+                                desc: config.desc,
+                                image_url: config.imageUrl,
+                                share_url: config.link,
+                                share_type: type,
+                                back: true
+                            }, function(t) {});
                         });
                     }
                 });
