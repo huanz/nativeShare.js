@@ -31,13 +31,15 @@
         } else if (match = /UCBrowser\/([\w.]+)/i.exec(agent)) {
             result.browser = 'uc';
             result.version = match[1];
-        } else if (/MQQBrowser/i.test(agent)) {
+        } else if (/MQQBrowser/.test(agent)) {
             result.browser = 'qqbrowser';
             if (match = /Version\/([\w.]+)/i.exec(agent)) {
                 result.version = match[1];
             }
         } else if (/mobile.*qq/i.test(agent)) {
             result.browser = 'mobileqq';
+        } else if (/SogouMobileBrowser/.test(agent)) {
+            result.browser = 'sougou';
         }
         if (agent.match('iPhone( Simulator)?;') || agent.match('iPad;') || agent.match('iPod;')) {
             result.os = 'ios';
@@ -114,15 +116,43 @@
                 }]);
                 break;
             case 'weixin':
-                intallScript('http://res.wx.qq.com/open/js/jweixin-1.0.0.js', function (error) {
-                    if (!error) {
-
+                intallScript('http://res.wx.qq.com/open/js/jweixin-1.0.0.js', function () {
+                    if (wx) {
+                        var url = 'http://sc.qq.com/fx/getToken?url=' + window.location.href;
+                        url += '&p=' + initjssdk + '&appId=' +config.appId;
+                        var xhr = new XMLHttpRequest();
+                        xhr.onload = function () {
+                            var res = JSON.parse(xhr.responseText);
+                            wx.config({
+                                debug: false,
+                                appId: res.appId,
+                                timestamp: res.timestamp,
+                                nonceStr: res.nonceStr,
+                                signature: res.signature,
+                                jsApiList: [
+                                    'onMenuShareTimeline',
+                                    'onMenuShareAppMessage',
+                                    'onMenuShareQQ',
+                                    'onMenuShareWeibo',
+                                    'onMenuShareQZone'
+                                ]
+                            });
+                            wx.ready(function () {
+                                wx.onMenuShareAppMessage(config);
+                                wx.onMenuShareTimeline(config);
+                                wx.onMenuShareQQ(config);
+                                wx.onMenuShareWeibo(config);
+                                wx.onMenuShareQZone(config);
+                            });
+                        };
+                        xhr.open('GET', url, true);
+                        xhr.send(null);
                     }
                 });
                 break;
             case 'baiduboxapp':
-                intallScript('http://static1.searchbox.baidu.com/static/searchbox/openjs/aio.js?v=201502', function (error) {
-                    if (!error) {
+                intallScript('http://static1.searchbox.baidu.com/static/searchbox/openjs/aio.js?v=201502', function () {
+                    if (Box && Box.isBox) {
                         Box.nativeShare({
                             title: config.title,
                             content: config.desc,
@@ -134,10 +164,19 @@
                 });
                 break;
             case 'uc':
-                if (ucweb) {
-                    ucweb.startRequest('shell.page_share', [config.title, config.imageUrl, config.link, '', '', '@' + config.from, '']);
-                } else if (ucbrowser) {
-                    ucbrowser.web_share(config.title, config.imageUrl, config.link, '', '', '@' + config.from, '');
+                if (ucbrowser) {
+                    ucbrowser.web_shareEX(JSON.stringify({
+                        title: config.title,
+                        content: config.desc,
+                        sourceUrl: config.link,
+                        imageUrl: config.imgUrl,
+                        target: '',
+                        disableTarget: '',
+                        source: '@' + config.from,
+                        htmlNode: ''
+                    }));
+                } else if (ucweb) {
+                    ucweb.startRequest('shell.page_share', [config.title, config.desc, config.link, '', '', '@' + config.from, '']);
                 }
                 break;
             case 'qqbrowser':
@@ -168,6 +207,16 @@
                         });
                     }
                 });
+                break;
+            case 'sougou':
+                if (SogouMse && SogouMse.Utility && SogouMse.Utility.shareWithInfo) {
+                    SogouMse.Utility.shareWithInfo({
+                        shareTitle: config.title,
+                        shareContent: config.desc,
+                        shareUrl: config.link,
+                        shareImageUrl: config.imageUrl
+                    });
+                }
                 break;
             default:
                 break;
