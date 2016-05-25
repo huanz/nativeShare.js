@@ -119,7 +119,7 @@
                 intallScript('http://res.wx.qq.com/open/js/jweixin-1.0.0.js', function () {
                     if (wx) {
                         var url = 'http://sc.qq.com/fx/getToken?url=' + window.location.href;
-                        url += '&p=' + initjssdk + '&appId=' +config.appId;
+                        url += '&p=' + initjssdk + '&appId=' + config.appId;
                         var xhr = new XMLHttpRequest();
                         xhr.onload = function () {
                             var res = JSON.parse(xhr.responseText);
@@ -223,7 +223,7 @@
         }
     };
     if (!noGlobal) {
-	    window.nativeShare = nativeShare;
+        window.nativeShare = nativeShare;
     }
     return nativeShare;
 }));
